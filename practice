@@ -1,0 +1,18 @@
+eclipse:
+new maven project
+create a random thing.
+select it: src/test/java
+package
+com.test.selenium
+new file: hello.java
+open pom.xml edit, etc. 
+csesalaar.vercel.app/subject/stm-lab/video2
+
+edge: extentions
+selenium
+create new project
+url
+start recording
+stop 
+test name
+run test

@@ -1,0 +1,149 @@
+npm create vite@latest my-r-app -- --template react
+
+Experiment 1: JSX and Virtual DOM
+App.js
+import React, { useState } from "react";
+
+function App() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <div>
+      <h1>JSX and Virtual DOM Demo</h1>
+      <p>Count: {count}</p>
+      <button onClick={() => setCount(count + 1)}>
+        Increment
+      </button>
+    </div>
+  );
+}
+
+export default App;
+
+
+Experiment 2: Product Listing Page using Stateless Components
+// App.js
+import React from "react";
+import ProductCard from "./ProductCard";
+
+const products = [
+  { id: 1, name: "Laptop", price: 75000, category: "Electronics" },
+  { id: 2, name: "Shoes", price: 2500, category: "Fashion" },
+  { id: 3, name: "Watch", price: 5000, category: "Accessories" },
+];
+
+function App() {
+  const handleBuyNow = (productName) => {
+    alert(`You clicked Buy Now for ${productName}`);
+  };
+
+  return (
+    <div style={{ textAlign: "center" }}>
+      <h1>🛍️ Product Listing Page</h1>
+      <div style={{ display: "flex", justifyContent: "center", gap: "20px" }}>
+        {products.map((product) => (
+          <ProductCard
+            key={product.id}
+            name={product.name}
+            price={product.price}
+            category={product.category}
+            onBuy={() => handleBuyNow(product.name)}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default App;
+
+
+// ProductCard.js
+import React from "react";
+
+function ProductCard({ name, price, category, onBuy }) {
+  return (
+    <div
+      style={{
+        border: "1px solid #ccc",
+        padding: "15px",
+        borderRadius: "8px",
+        width: "200px",
+      }}
+    >
+      <h3>{name}</h3>
+      <p>Category: {category}</p>
+      <p>Price: ₹{price}</p>
+      <button onClick={onBuy}>Buy Now</button>
+    </div>
+  );
+}
+
+export default ProductCard;
+
+
+Experiment 3: Inventory Management using React Hooks
+
+
+// App.js
+import React, { useState, useEffect, useMemo, useRef, useContext, createContext } from "react";
+
+const ThemeContext = createContext();
+
+function App() {
+  const [products, setProducts] = useState([]);
+  const [search, setSearch] = useState("");
+  const [theme, setTheme] = useState("light");
+  const nameRef = useRef();
+  const priceRef = useRef();
+
+  const addProduct = () => {
+    const name = nameRef.current.value;
+    const price = parseFloat(priceRef.current.value);
+    if (name && price) {
+      setProducts([...products, { name, price }]);
+      nameRef.current.value = "";
+      priceRef.current.value = "";
+    }
+  };
+
+  const filteredProducts = useMemo(() => {
+    return products.filter((p) =>
+      p.name.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [products, search]);
+
+  const totalValue = useMemo(() => {
+    return filteredProducts.reduce((sum, p) => sum + p.price, 0);
+  }, [filteredProducts]);
+
+  useEffect(() => {
+    document.body.style.backgroundColor = theme === "light" ? "#fff" : "#333";
+    document.body.style.color = theme === "light" ? "#000" : "#fff";
+  }, [theme]);
+
+  return (
+    <ThemeContext.Provider value={{ theme, setTheme }}>
+      <div style={{ textAlign: "center" }}>
+        <h1>📦 Inventory Management</h1>
+        <input placeholder="Search product..." value={search} onChange={(e) => setSearch(e.target.value)} />
+        <br /><br />
+        <input ref={nameRef} placeholder="Product Name" />
+        <input ref={priceRef} placeholder="Price" type="number" />
+        <button onClick={addProduct}>Add Product</button>
+        <br /><br />
+        <button onClick={() => setTheme(theme === "light" ? "dark" : "light")}>
+          Toggle {theme === "light" ? "Dark" : "Light"} Theme
+        </button>
+        <h3>Total Inventory Value: ₹{totalValue}</h3>
+        <ul>
+          {filteredProducts.map((p, i) => (
+            <li key={i}>{p.name} - ₹{p.price}</li>
+          ))}
+        </ul>
+      </div>
+    </ThemeContext.Provider>
+  );
+}
+
+export default App;
