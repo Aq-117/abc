@@ -1,0 +1,380 @@
+<dependencies>
+    <!-- Selenium WebDriver Dependency for Java -->
+    <dependency>
+        <groupId>org.openqa.seleniumhq.selenium</groupId>
+        <artifactId>selenium-java</artifactId>
+        <version>4.28.0</version>
+    </dependency>
+
+    <!-- TestNG Dependency (Recommended for assertions) -->
+    <dependency>
+        <groupId>org.testng</groupId>
+        <artifactId>testng</artifactId>
+        <version>7.10.2</version>
+        <scope>test</scope>
+    </dependency>
+</dependencies>
+
+
+
+Experiment 2: GUI Checkpoint for Single Property (Title/Text/Attribute)
+
+
+package com.test.selenium; 
+ 
+import org.openqa.selenium.WebDriver; 
+import org.openqa.selenium.chrome.ChromeDriver; 
+ 
+public class Exp2_SinglePropertyCheckpoint { 
+    public static void main(String[] args) throws InterruptedException { 
+        WebDriver driver = new ChromeDriver(); 
+        driver.get("https://www.google.com"); 
+ 
+        String expectedTitle = "Google"; 
+        String actualTitle = driver.getTitle(); 
+ 
+        System.out.println("Actual Title   : " + actualTitle); 
+        System.out.println("Expected Title : " + expectedTitle); 
+ 
+        if (actualTitle.equals(expectedTitle)) { 
+            System.out.println("PASS: Title is correct"); 
+        } else { 
+            System.out.println("FAIL: Title is incorrect"); 
+        } 
+ 
+        Thread.sleep(2000); 
+        driver.quit(); 
+    } 
+} 
+Output 
+Actual Title   : Google 
+Expected Title : Google 
+PASS: Title is correct 
+
+
+
+Experiment 3: GUI Checkpoint for Single Object/Window (Displayed/Enabled)
+
+
+package com.test.selenium; 
+ 
+import org.openqa.selenium.*; 
+import org.openqa.selenium.chrome.ChromeDriver; 
+ 
+public class Exp3_SingleObjectCheckpoint { 
+    public static void main(String[] args) throws InterruptedException { 
+        WebDriver driver = new ChromeDriver(); 
+        driver.get("https://www.google.com"); 
+ 
+        WebElement searchBox = driver.findElement(By.name("q")); 
+        System.out.println("Displayed: " + searchBox.isDisplayed()); 
+        System.out.println("Enabled  : " + searchBox.isEnabled()); 
+ 
+        System.out.println(searchBox.isDisplayed() && searchBox.isEnabled() 
+            ? "PASS: Search box is ready" 
+            : "FAIL: Search box is not ready"); 
+ 
+        Thread.sleep(2000); 
+        driver.quit(); 
+    } 
+ 
+} 
+
+
+
+Experiment 4(a): Bitmap Checkpoint for Object/Window (Screenshot Comparison) 
+
+package com.test.selenium; 
+import org.openqa.selenium.*; 
+import org.openqa.selenium.chrome.ChromeDriver; 
+import org.openqa.selenium.io.FileHandler; 
+import javax.imageio.ImageIO; 
+import java.awt.image.BufferedImage; 
+import java.io.File; 
+public class NewTest{ 
+    public static void main(String[] args) throws Exception { 
+        WebDriver driver = new ChromeDriver(); 
+        try { 
+            driver.get("https://www.google.com"); 
+            // Locate object 
+            WebElement searchBox = driver.findElement(By.name("q")); 
+            // Create Screenshots folder 
+            File folder = new File("Screenshots"); 
+            if (!folder.exists()) { 
+                folder.mkdir(); 
+            } 
+            // Capture current screenshot 
+            File currentImage = 
+                    searchBox.getScreenshotAs(OutputType.FILE); 
+            File currentFile = 
+                    new File("Screenshots/current_searchbox.png"); 
+            FileHandler.copy(currentImage, currentFile); 
+ 
+ 
+ 
+11  
+ 
+ 
+ 
+ 
+            System.out.println("Current screenshot saved:"); 
+            System.out.println(currentFile.getAbsolutePath()); 
+            // Baseline image 
+            File baselineFile = 
+                    new File("Screenshots/baseline_searchbox.png"); 
+            if (!baselineFile.exists()) { 
+                System.out.println("Baseline image not found."); 
+                System.out.println("Rename current_searchbox.png as baseline_searchbox.png"); 
+            } 
+            else { 
+                boolean result = compareImages(baselineFile, currentFile); 
+    if(result) { 
+      System.out.println("BITMAP CHECKPOINT : TEST PASS"); 
+                    System.out.println("Images are identical.") 
+  } 
+                else { 
+   System.out.println("BITMAP CHECKPOINT : TEST FAIL");                    
+ System.out.println("Images are different."); 
+       } 
+            } 
+ 
+        }         
+catch(Exception e) { 
+            System.out.println("Execution Failed"); 
+            e.printStackTrace(); 
+        } 
+ 
+        finally { 
+       driver.quit(); 
+       }    } 
+ 
+    // Method to compare image pixels 
+   public static boolean compareImages(File img1, File img2) 
+            throws Exception { 
+        BufferedImage image1 =   ImageIO.read(img1); 
+        BufferedImage image2 =   ImageIO.read(img2); 
+     if(image1.getWidth()!=image2.getWidth()|| image1.getHeight()!=image2.getHeight())  
+{ 
+ return false; 
+        } 
+  for(int x=0; x<image1.getWidth(); x++)  
+{ 
+for(int y=0; y<image1.getHeight(); y++)  
+{ 
+          if(image1.getRGB(x,y) != image2.getRGB(x,y) 
+  return false; 
+                } 
+} 
+ 
+ 
+ 
+12  
+ 
+ 
+ 
+ 
+ 
+ 
+        } 
+   return true; 
+ 
+    } 
+ 
+}  
+ 
+ 
+First Excecution  
+ 
+Current screenshot saved: 
+C:\Users\YourName\eclipse-workspace\YourProject\Screenshots\current_searchbox.png 
+Baseline image not found. 
+Rename current_searchbox.png as baseline_searchbox.png 
+Second Execution 
+ 
+Current screenshot saved: 
+C:\Users\YourName\eclipse-workspace\YourProject\Screenshots\current_searchbox.png 
+BITMAP CHECKPOINT : TEST PASS 
+Images are identical. 
+
+
+Experiment 4(b): Bitmap Checkpoint for Screen Area (Crop + Compare)
+package com.test.selenium
+import javax.imageio.ImageIO; 
+import org.openqa.selenium.*; 
+import org.openqa.selenium.chrome.ChromeDriver; 
+public class NewTest { 
+public static void main(String[] args) throws Exception { 
+WebDriver driver = new ChromeDriver(); 
+try { 
+ driver.manage().window().maximize(); 
+driver.get("https://www.google.com"); 
+Thread.sleep(3000); 
+ // Capture screenshot 
+            File screenshot =((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE); 
+BufferedImage fullImage =  ImageIO.read(screenshot); 
+// Local folder 
+  File folder = new File("C:\\SeleniumScreenshots"); 
+  if (!folder.exists()) 
+ { 
+     folder.mkdirs(); 
+ 
+ 
+ 
+ 
+14  
+ 
+ 
+            } 
+ // Capture screen area 
+   int width = Math.min(800, fullImage.getWidth()); 
+   int height = Math.min(600, fullImage.getHeight()); 
+  BufferedImage currentArea =  fullImage.getSubimage(0,0,width,height); 
+    File currentFile = new File( "C:\\SeleniumScreenshots\\current_google_area.png"); 
+ ImageIO.write(currentArea, "png",    currentFile); 
+ System.out.println( "Current screenshot saved:"); 
+ System.out.println(currentFile.getAbsolutePath()); 
+File baselineFile =  new File("C:\\SeleniumScreenshots\\baseline_google_area.png"); 
+   if(!baselineFile.exists()) { 
+System.out.println("Baseline image not found."); 
+ System.out.println("Rename current_google_area.png to baseline_google_area.png"); 
+   } 
+else { 
+  BufferedImage baseline = ImageIO.read(baselineFile); 
+double similarity =compareImages(baseline, currentArea); 
+System.out.println(  "Image Similarity : "  + similarity + "%"); 
+ if(similarity >= 95) { 
+System.out.println(     "BITMAP CHECKPOINT : TEST PASS"); 
+    } 
+else {  
+System.out.println("BITMAP CHECKPOINT : TEST FAIL"); 
+ } 
+ } 
+ 
+        } 
+        finally { 
+  driver.quit(); 
+   } 
+  } 
+public static double compareImages( BufferedImage img1,BufferedImage img2)  
+{ 
+ if(img1.getWidth()!=img2.getWidth() || img1.getHeight()!=img2.getHeight()) { 
+return 0; 
+        } 
+ long totalPixels = img1.getWidth()* img1.getHeight(); 
+long samePixels = 0; 
+for(int x=0; x<img1.getWidth(); x++) 
+ { 
+ for(int y=0; y<img1.getHeight(); y++) 
+ { 
+   if(img1.getRGB(x,y) == img2.getRGB(x,y)) 
+ { 
+ 
+ 
+ 
+ 
+15  
+ 
+ 
+ 
+ 
+ 
+samePixels++; 
+ 
+                } 
+ 
+            } 
+        } 
+ return 
+        ((double)samePixels / totalPixels) * 100; 
+ 
+    } 
+ 
+} 
+ 
+ 
+Output 
+ 
+First Execution 
+ 
+Current screenshot saved: 
+C:\SeleniumScreenshots\current_google_area.png 
+Baseline image not found. 
+ 
+Rename current_google_area.png to baseline_google_area.png 
+ 
+ 
+Second Execution 
+Current screenshot saved: 
+C:\SeleniumScreenshots\current_google_area.png 
+ 
+Image Similarity : 99.72% 
+ 
+BITMAP CHECKPOINT : TEST PASS  
+
+Experiment 5: Database Checkpoint – Default Check (Record Exists) 
+*************************************** 
+// Not For Students (for your refrence) 
+To install H2 DATABASE Dependency for pom.xml 
+<dependency> 
+    <groupId>com.h2database</groupId> 
+    <artifactId>h2</artifactId> 
+    <version>2.4.240</version> 
+</dependency> 
+************************************** 
+ 
+package com.test.selenium; 
+import java.sql.Connection; 
+import java.sql.DriverManager; 
+import java.sql.ResultSet; 
+import java.sql.Statement; 
+public class NewTest { 
+public static void main(String[] args) { 
+try { 
+  // Connect to H2 Database 
+            Connection con = DriverManager.getConnection("jdbc:h2:./StudentDB","sa",""); 
+    Statement stmt = con.createStatement(); 
+// Create table if it does not exist 
+            stmt.execute("CREATE TABLE IF NOT EXISTS STUDENT ("+ "ID INT PRIMARY 
+KEY, "+ "NAME VARCHAR(50),"+ "EMAIL VARCHAR(100))"); 
+  // Remove previous data (optional) 
+            stmt.execute("DELETE FROM STUDENT"); 
+ // Insert one record 
+            stmt.executeUpdate("INSERT INTO STUDENT VALUES " + 
+"(1,'Ajay','ajay@gmail.com')"); 
+ // Database Checkpoint 
+            ResultSet rs = stmt.executeQuery("SELECT * FROM STUDENT WHERE ID = 1"); 
+ if (rs.next()) { 
+                System.out.println("Record Exists"); 
+                System.out.println("ID    : " + rs.getInt("ID")); 
+                System.out.println("Name  : " + rs.getString("NAME")); 
+                System.out.println("Email : " + rs.getString("EMAIL")); 
+                System.out.println("TEST PASSED"); 
+            } else { 
+                System.out.println("Record Not Found"); 
+                System.out.println("TEST FAILED"); 
+            } 
+ 
+ 
+ 
+ 
+17  
+ 
+ 
+// Close connection 
+            con.close(); 
+} catch (Exception e) { 
+            e.printStackTrace(); 
+        } 
+    } 
+} 
+ 
+ 
+Output 
+ 
+Record Exists 
+ID    : 1 
+Name  : Ajay 
+Email : ajay@gmail.com 
+TEST PASSED 
+ 
+Process finished with exit code 0 

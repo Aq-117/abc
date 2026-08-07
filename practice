@@ -5,7 +5,9 @@ select it: src/test/java
 package
 com.test.selenium
 new file: hello.java
-open pom.xml edit, etc. 
+open pom.xml edit, etc.
+maven clean compile terminal.
+paste code in hello.java, run file: check output in console. 
 csesalaar.vercel.app/subject/stm-lab/video2
 
 edge: extentions
