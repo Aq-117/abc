@@ -1,0 +1,774 @@
+
+Experiment 1: Recording in Context Sensitive Mode and Analog Mode (Selenium IDE) 
+Tools/Requirements: 
+• Selenium IDE extension (Chrome/Edge) 
+• Any demo site for drag-and-drop (optional) 
+Procedure: 
+1. Open Chrome/Edge and install the Selenium IDE extension from the browser extensions store. 
+2. Click the Extensions icon and open Selenium IDE. 
+3. Click 'Create a new project' and enter a project name. 
+4. Click 'Add new test' and name the test case (e.g., TC_Record_Google). 
+5. Click the red 'Record' button. 
+6. Enter the base URL (e.g., https://www.google.com) and click 'Start Recording'. 
+7. Perform actions: click the search box, type a keyword, press Enter, click a result, then go back. 
+8. Stop recording and review the generated commands (open, click, type, assert). 
+9. Run the test using the 'Run current test' (play) button. 
+10. For analog-style actions: try recording a drag-and-drop or slider movement on a demo site and replay it. 
+11. Save the project in Selenium IDE. 
+Notes: 
+• Selenium IDE is mainly context-sensitive (element based). True analog recording is limited. 
+• For complex gestures use Selenium WebDriver code with the Actions class. 
+ 
+Output: 
+Running 'TC_Record_Google' 
+open | https://www.google.com | 
+type | name=q | selenium 
+assertTitle | Google | 
+Test completed successfully 
+Result: PASS 
+
+
+
+
+Experiment 6: Database Checkpoint – Custom Check (Validate Specific Value) 
+ 
+       import java.sql.*; 
+       public class DatabaseCheckpointCustomCheck { 
+       static final String DB_URL = "jdbc:sqlite:student.db"; 
+       public static void setupDatabase() throws SQLException { 
+       try (Connection conn = DriverManager.getConnection(DB_URL);  
+       Statement stmt = conn.createStatement()) {  
+       stmt.execute("CREATE TABLE IF NOT EXISTS students (" +"id INTEGER PRIMARY KEY, name   
+TEXT, marks INTEGER)"); 
+       stmt.execute("DELETE FROM students"); 
+       stmt.execute("INSERT INTO students VALUES (1, 'Amit', 78)");  
+       stmt.execute("INSERT INTO students VALUES (2, 'Neha', 45)");  
+       stmt.execute("INSERT INTO students VALUES (3, 'Ravi', 92)"); 
+} 
+} 
+ 
+public static boolean customCheckpoint(int studentId,String expectedStatus) 
+throws SQLException { 
+try (Connection conn = DriverManager.getConnection(DB_URL);  
+PreparedStatement ps = conn.prepareStatement("SELECT marks FROM students WHERE id = ?")) { 
+ps.setInt(1, studentId); 
+ResultSet rs = ps.executeQuery(); 
+if (!rs.next()) { 
+System.out.println("FAIL: No record found for id " + studentId);  
+return false; 
+} 
+int marks = rs.getInt("marks"); 
+String actualStatus = (marks >= 50) ? "Pass" : "Fail"; 
+if (actualStatus.equals(expectedStatus)) {  
+System.out.println("PASS: Student " + studentId +" status = " + actualStatus + " (Custom check 
+matched)"); 
+return true; 
+} else { 
+System.out.println("FAIL: Student " + studentId + " expected " + expectedStatus +", got " + 
+actualStatus);  
+return false; 
+} 
+} 
+} 
+      public static void main(String[] args) throws Exception { setupDatabase(); 
+customCheckpoint(1, Pass"); 
+customCheckpoint(2, Fail"); 
+customCheckpoint(3, Pass"); 
+} } 
+ 
+17  
+Compile / Run Commands 
+    javac -cp sqlite-jdbc-3.34.0.jar DatabaseCheckpointCustomCheck.java  
+    java -cp ".;sqlite-jdbc-3.34.0.jar" DatabaseCheckpointCustomCheck 
+     
+    Output 
+     PASS: Student 1 status = Pass (Custom check matched)      
+     PASS: Student 2 status = Fail (Custom check matched)  
+     PASS: Student 3 status = Pass (Custom check matched) 
+ 
+ 
+18  
+Week8 
+ 
+Experiment 7(a): Data Driven Test – Dynamic Test Data Submission 
+import java.util.Random; 
+public class DynamicDataTest { 
+public static double calculateDiscount(double price, String category) { switch (category) { 
+case "electronics": return price * 0.9; case "clothing": return price * 0.8; default: return price; 
+} 
+} 
+public static void main(String[] args) { 
+String[] categories = {"electronics", "clothing", "grocery"}; Random rand = new Random(); 
+System.out.println("---- Dynamic Test Data Submission "); 
+ 
+for (int i = 1; i <= 5; i++) { 
+int price = 100 + rand.nextInt(901); 
+String category = categories[rand.nextInt(categories.length)];  
+double result = calculateDiscount(price, category); 
+ System.out.printf( 
+"Test %d: price=%d, category=%s -> discounted=%.2f%n", i, price, category, result); 
+} 
+} 
+} 
+ 
+Compile / Run Commands 
+    javac DynamicDataTest.java  
+    java DynamicDataTest     
+     
+ Output 
+ ---- Dynamic Test Data Submission ---- 
+ Test 1: price=527, category=electronics -> discounted=474.30  
+ Test 2: price=304, category=clothing -> discounted=243.20 
+         Test 3: price=812, category=grocery -> discounted=812.00  
+        Test 4: price=450, category=electronics -> discounted=405.00  
+        Test 5: price=265, category=clothing -> discounted=212.00 
+ 
+ 
+ 
+ 
+ 
+ 
+\ 
+19  
+Experiment 7(b): Data Driven Test – Through Flat Files (CSV/TXT) 
+import java.io.*; 
+ 
+public class FlatFileTest { 
+public static double calculateDiscount(double price, String category) { switch (category) { 
+case "electronics": return price * 0.9; case "clothing": return price * 0.8; default: return price; 
+} 
+} 
+public static void createFlatFile() throws IOException { 
+try (PrintWriter pw = new PrintWriter(new FileWriter("testdata.txt")))  
+{  
+pw.println("500,electronics"); 
+pw.println("300,clothing"); pw.println("150,grocery"); 
+} 
+} 
+public static void flatFileTest() throws IOException {  
+System.out.println("---- Data Driven Test via Flat File "); 
+try (BufferedReader br = new BufferedReader( new FileReader("testdata.txt"))) 
+ { 
+String line; 
+while ((line = br.readLine()) != null) { String[] parts = line.split(","); 
+double price = Double.parseDouble(parts[0]); String category = parts[1]; 
+double result = calculateDiscount(price, category);  
+System.out.printf( 
+                                   "price=%.1f, category=%s -> discounted=%.2f%n", price, category, result); 
+} 
+} 
+} 
+ 
+public static void main(String[] args) throws IOException { createFlatFile(); 
+flatFileTest(); 
+} 
+} 
+Compile / Run Commands 
+javac FlatFileTest.java  
+java FlatFileTest 
+ Output 
+ ---- Data Driven Test via Flat File ---- 
+ price=500.0, category=electronics -> discounted=450.00  
+ price=300.0, category=clothing -> discounted=240.00 
+ price=150.0, category=grocery -> discounted=150.0 
+20  
+Week9 
+        Experiment 7(c): Data Driven Test – Through Front Grids (Web Tables) 
+ import javax.swing.*; 
+import javax.swing.table.DefaultTableModel; 
+public class FrontEndGridTest { 
+public static double calculateDiscount(double price, String category) { switch (category) { 
+case "electronics": return price * 0.9; case "clothing": return price * 0.8; default: return price; 
+} 
+} 
+public static void main(String[] args) { 
+JFrame frame = new JFrame("Front End Grid - Data Driven Test");  
+String[] columns = {"Price", "Category", "Result"};  
+DefaultTableModel model = new DefaultTableModel(columns, 0); 
+ 
+Object[][] gridData = { 
+{500.0, "electronics"}, 
+{300.0, "clothing"}, 
+{150.0, "grocery"} 
+}; 
+ 
+for (Object[] row : gridData) { double price = (double) row[0]; 
+String category = (String) row[1]; 
+double result = calculateDiscount(price, category);  
+model.addRow(new Object[]{ 
+price, category, String.format("%.2f", result)}); 
+} 
+JTable table = new JTable(model);  
+frame.add(new JScrollPane(table));  
+frame.setSize(400, 200); 
+frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);  
+frame.setVisible(true); 
+} 
+} 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+21  
+Compile / Run Commands 
+ javac FrontEndGridTest.java  
+ java FrontEndGridTest     
+  
+Output 
+ Price Category Result 
+500.0 electronics 450.00 
+300.0 clothing 240.00 
+150.0 grocery 150.00 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+22  
+Experiment 7(d): Data Driven Test – Through Excel 
+ 
+       import org.apache.poi.ss.usermodel.*; 
+       import org.apache.poi.xssf.usermodel.XSSFWorkbook; import java.io.*;   
+       public class ExcelDrivenTest { 
+       public static double calculateDiscount(double price, String category) { switch (category) { 
+       case "electronics": return price * 0.9; case "clothing": return price * 0.8; default: return price; 
+      } 
+    } 
+    public static void createExcelFile() throws IOException {  
+    Workbook wb = new XSSFWorkbook(); 
+    Sheet sheet = wb.createSheet("TestData"); 
+ 
+    Object[][] data = { 
+    {"Price", "Category"}, 
+    {500.0, "electronics"}, 
+    {300.0, "clothing"}, 
+    {150.0, "grocery"} 
+   }; 
+   for (int r = 0; r < data.length; r++) { Row row = sheet.createRow(r); 
+   for (int c = 0; c < data[r].length; c++) { Cell cell = row.createCell(c); 
+   if (data[r][c] instanceof Double) cell.setCellValue((Double) data[r][c]); 
+   else 
+        cell.setCellValue((String) data[r][c]); 
+      } 
+    } 
+    try (FileOutputStream fos = new FileOutputStream("testdata.xlsx")) { wb.write(fos); 
+   } 
+   wb.close(); 
+   } 
+ 
+    public static void excelDrivenTest() throws IOException {  
+    System.out.println("---- Data Driven Test via Excel "); 
+    try (FileInputStream fis = new FileInputStream("testdata.xlsx");  
+    Workbook wb = new XSSFWorkbook(fis)) { 
+    Sheet sheet = wb.getSheetAt(0); 
+    for (Row row : sheet) { 
+    if (row.getRowNum() == 0) continue; 
+    double price = row.getCell(0).getNumericCellValue();  
+    String category = row.getCell(1).getStringCellValue();         
+    double result = calculateDiscount(price, category); 
+    System.out.printf("price=%.1f, category=%s -> discounted=%.2f%n", price, category, result); 
+    } 
+   } 
+  } 
+   public static void main(String[] args) throws IOException { createExcelFile(); 
+   excelDrivenTest(); 
+    } 
+  } 
+ 
+ 
+23  
+ Compile / Run Commands 
+    javac -cp ".;poi-5.2.5.jar;poi-ooxml-5.2.5.jar;poi-ooxml-lite-5.2.5.jar;xmlbeans-5.2.0.jar;commons-    
+     collections4-  4.4.jar;commons-compress-1.26.0.jar;commons-io-2.15.1.jar;log4j-api-2.20.0.jar" 
+    ExcelDrivenTest.java 
+  java -cp ".;poi-5.2.5.jar;poi-ooxml-5.2.5.jar;poi-ooxml-lite-5.2.5.jar;xmlbeans-5.2.0.jar;commons-                                         
+collections4-4.4.jar;commons-compress-1.26.0.jar;commons-io-2.15.1.jar;log4j-api-2.20.0.jar"              
+ExcelDrivenTest 
+  
+  Output 
+ ---- Data Driven Test via Excel ---- 
+   price=500.0, category=electronics -> discounted=450.00  
+   price=300.0, category=clothing -> discounted=240.00  
+     price=150.0, category=grocery -> discounted=150.00 
+ 
+     Week10 
+ 
+Experiment 7(e): Batch Testing – Without Parameter Passing (Suite Run) 
+       public class BatchNoParams { 
+       public static void testAddition() {  
+       assert 2 + 3 == 5; 
+       System.out.println("test_addition: PASS"); 
+    } 
+     public static void testSubtraction() { assert 5 - 2 == 3; 
+     System.out.println("test_subtraction: PASS"); 
+   } 
+   public static void main(String[] args) { 
+   System.out.println("---- Batch Testing (No Parameters) "); 
+   testAddition(); testSubtraction(); 
+   } 
+  } 
+    
+Compile / Run Commands 
+javac BatchNoParams.java  
+java -ea BatchNoParams 
+  
+Output ---- Batch Testing (No Parameters) ---
+test_addition: PASS 
+test_subtraction: PASS 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+24 
+ 
+Experiment 7(f): Batch Testing – With Parameter Passing (Suite Parameters) 
+ 
+ public class BatchWithParams { 
+ static void testOperation(int a, int b, char op, int expected) {  
+ int result = 0; 
+ switch (op) { 
+ case '+': result = a + b;  
+    break;  
+            case '-': result = a - b;  
+                         break;  
+            case '*': result = a * b;  
+                         break; 
+         } 
+         String status = (result == expected) ? "PASS" : "FAIL";  
+         System.out.printf("Test: %d %c %d = %d (expected %d) -> %s%n", a, op, b, result, expected, status); 
+       } 
+       public static void main(String[] args) {  
+       int[][] testCases = {{2, 3, '+', 5},{10, 4, '-', 6},{3, 3, '*', 9},{5, 5, '-', 1}}; 
+       System.out.println("---- Batch Testing (With Parameters) "); 
+       for (int[] tc : testCases) { 
+       testOperation(tc[0], tc[1], (char) tc[2], tc[3]); 
+      } 
+    } 
+  } 
+ 
+ 
+  Compile / Run Commands 
+ javac BatchWithParams.java  
+ java BatchWithParams  
+ 
+  Output 
+ ---- Batch Testing (With Parameters) ---
+ Test: 2 + 3 = 5 (expected 5) -> PASS 
+ Test: 10 - 4 = 6 (expected 6) -> PASS 
+ Test: 3 * 3 = 9 (expected 9) -> PASS 
+ Test: 5 - 5 = 0 (expected 1) -> FAIL 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+25 
+ 
+ 
+     Week 11 
+ 
+Experiment 8: Data Driven Batch (Batch + Multiple Data Sets) 
+   public class DataDrivenBatch { 
+   public static double calculateDiscount(double price, String category) {  
+   switch (category) { 
+   case "electronics": return price * 0.9;  
+   case "clothing": return price * 0.8;  
+   default: return price; 
+  } 
+} 
+public static void createCsvFile() throws IOException { 
+try (PrintWriter pw = new PrintWriter(new FileWriter("batch_data.csv"))) { 
+pw.println("Price,Category,ExpectedResult");  
+pw.println("500,electronics,450"); 
+pw.println("300,clothing,240");  
+pw.println("150,grocery,150");  
+pw.println("1000,electronics,900"); 
+} 
+} 
+public static void dataDrivenBatch() throws IOException {  
+System.out.println("---- Data Driven Batch Test "); 
+int passCount = 0, failCount = 0; 
+try (BufferedReader br =new BufferedReader(new FileReader("batch_data.csv"))) {  
+String line = br.readLine(); 
+while ((line = br.readLine()) != null) {  
+String[] parts = line.split(","); 
+double price = Double.parseDouble(parts[0]);  
+String category = parts[1]; 
+double expected = Double.parseDouble(parts[2]);  
+double actual = calculateDiscount(price, category); 
+if (actual == expected) {  
+System.out.printf("PASS: %s, price=%.1f -> %.1f%n", category, price, actual); 
+passCount++; 
+} else { 
+System.out.printf("FAIL: %s, price=%.1f -> got %.1f, expected %.1f%n", category, price, actual, expected); 
+failCount++; 
+} 
+} 
+} 
+System.out.println("\nBatch Summary: " + passCount +" Passed, " + failCount + " Failed"); 
+} 
+public static void main(String[] args) throws IOException {  
+    createCsvFile(); 
+    dataDrivenBatch(); 
+  } 
+} 
+ 
+ 
+ 
+26 
+ 
+ 
+  Compile / Run Commands 
+ javac DataDrivenBatch.java  
+     java DataDrivenBatch 
+ 
+ 
+  Output 
+ ---- Data Driven Batch Test ---- 
+     PASS: electronics, price=500.0 -> 450.0  
+     PASS: clothing, price=300.0 -> 240.0  
+     PASS: grocery, price=150.0 -> 150.0  
+     PASS: electronics, price=1000.0 -> 900.0 
+ 
+     Batch Summary: 4 Passed, 0 Failed 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+27 
+ 
+ 
+Week 12 
+ 
+   Experiment 9: Silent Mode Test Execution (Headless) 
+      import java.util.logging.*;  
+      import java.io.IOException; 
+      public class SilentModeTest { 
+      static Logger logger = Logger.getLogger("SilentTestLogger"); 
+      static void setupLogger() throws IOException {  
+      logger.setUseParentHandlers(false); 
+      FileHandler fh = new FileHandler("silent_test_log.txt");  
+      fh.setFormatter(new SimpleFormatter());  
+      logger.addHandler(fh); 
+     } 
+     static void testCase(String name, Object actual, Object expected) {  
+     try { 
+     if (actual.equals(expected)) { 
+         logger.info(name + ": PASS (actual=" + actual + ", expected=" + expected + ")"); 
+     } else { 
+     logger.severe(name + ": FAIL (actual=" + actual + ", expected=" + expected + ")"); 
+    } 
+   } catch (Exception e) { 
+    logger.severe(name + ": ERROR - " + e.getMessage()); 
+    } 
+   } 
+   public static void main(String[] args) throws IOException { setupLogger(); 
+   testCase("Addition Test", 2 + 2, 4); 
+   testCase("Subtraction Test", 10 - 5, 5); 
+ 
+28 
+ 
+   testCase("Multiplication Test", 3 * 3, 10);  
+    testCase("String Test", "abc".toUpperCase(), "ABC"); 
+    System.out.println("Batch execution completed silently. " + "Check silent_test_log.txt for results.");  
+    } 
+   } 
+     
+    Compile / Run Commands 
+ javac SilentModeTest.java  
+     java SilentModeTest  
+     type silent_test_log.txt 
+ 
+  Output 
+ Terminal: 
+      Batch execution completed silently. Check silent_test_log.txt for results. 
+ 
+      Log file (message portion): 
+      INFO: Addition Test: PASS (actual=4, expected=4)  
+      INFO: Subtraction Test: PASS (actual=5, expected=5) 
+             SEVERE: Multiplication Test: FAIL (actual=9, expected=10)      
+             INFO: String Test: PASS (actual=ABC, expected=ABC) 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+29 
+ 
+Week 13 
+ 
+Experiment 10 - Test Case for Calculator in Windows Application 
+import java.awt.*; 
+import java.awt.event.KeyEvent;  
+import java.awt.image.BufferedImage;  
+import javax.imageio.ImageIO; 
+import java.io.File; 
+public class CalculatorTest { 
+public static void main(String[] args) throws Exception {  
+Runtime.getRuntime().exec("calc.exe");  
+Thread.sleep(2000); 
+Robot robot = new Robot();  
+robot.setAutoDelay(200); 
+ 
+typeKey(robot, KeyEvent.VK_7);  
+typeKey(robot, KeyEvent.VK_ADD);  
+typeKey(robot, KeyEvent.VK_5);  
+typeKey(robot, KeyEvent.VK_EQUALS); 
+Thread.sleep(1000); 
+Rectangle screenRect = new Rectangle( Toolkit.getDefaultToolkit().getScreenSize()); 
+BufferedImage capture = robot.createScreenCapture(screenRect); 
+ 
+ImageIO.write(capture, "png",new File("calculator_result.png")); 
+System.out.println("Test executed: 7 + 5 =");  
+System.out.println("Screenshot saved as calculator_result.png -- " + "compare visually to confirm result is 12"); 
+} 
+ 
+static void typeKey(Robot robot, int keyCode) {  
+   robot.keyPress(keyCode);  
+   robot.keyRelease(keyCode); 
+  } 
+} 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+30 
+ 
+  Compile / Run Commands 
+ javac CalculatorTest.java  
+     java CalculatorTest 
+ 
+  Output 
+ Test executed: 7 + 5 =12 
+     Screenshot saved as calculator_result.png -- compare visually to confirm result is 12
+
+
+
+
+
+
+
+
+
+
+
+
+1. User Interface (UI) Automation
+
+• Experiment 1: Recording in Context Sensitive & Analog Mode (Selenium IDE)
+	• What it does: Uses a browser extension called Selenium IDE to "record" user actions (like clicking a search box, typing text, and hitting enter) on Google. It then plays back those actions to verify the page loads correctly (assertTitle).
+	• Key takeaway: Shows you the basics of "Record and Playback" browser testing. It notes that while it easily tracks element clicks (context-sensitive), complex gestures like drag-and-drop (analog mode) require advanced coding (WebDriver).
+
+2. Verification & Validation Checkpoints
+
+• Experiment 6: Database Checkpoint – Custom Check
+	• What it does: Creates a temporary database of student records (Amit, Neha, Ravi) and their marks. The script queries the database for a specific student ID, calculates whether they passed (≥ 50 marks) or failed, and checks if that matches an expected status.
+	• Key takeaway: Teaches how to build automated Database Checkpoints to verify back-end data accuracy directly from a database.
+
+3. Data-Driven Testing (Running the same test with different inputs)
+
+• Experiment 7(a): Dynamic Test Data Submission
+	• What it does: Generates random product prices and shopping categories (electronics, clothing, etc.), calculates an automated discount, and prints the result.
+• Experiment 7(b): Through Flat Files (CSV/TXT)
+	• What it does: First, it writes a text file (testdata.txt) containing shopping prices and categories. It then reads that text file line-by-line to calculate discounts.
+• Experiment 7(c): Through Front Grids (Web Tables)
+	• What it does: Uses Java's graphical user interface framework (Swing) to create a visual spreadsheet window (UI table), loads data into it, and computes the discounts.
+• Experiment 7(d): Through Excel
+	• What it does: Uses a specialized library (Apache POI) to programmatically build an Excel sheet (testdata.xlsx), save it, and then read data back out of it to compute discounts.
+	• Key takeaway: Experiments 7(a) through 7(d) demonstrate Data-Driven Testing, showing how to pull test inputs from four different sources: random generation, text files, UI tables, and Excel spreadsheets.
+
+4. Batch & Suite Testing (Running multiple tests together)
+
+• Experiment 7(e): Batch Testing – Without Parameter Passing
+	• What it does: Runs a simple hardcoded "test suite" that checks basic addition and subtraction formulas sequentially.
+• Experiment 7(f): Batch Testing – With Parameter Passing
+	• What it does: Creates an array of multiple test equations (e.g., 2+3=5, 10-4=6, etc.). It loops through them all and evaluates them, intentionally showing a FAIL when an equation is mathematically incorrect (5-5=1).
+• Experiment 8: Data Driven Batch (Batch + Multiple Data Sets)
+	• What it does: Combines data-driven files with batch testing. It builds a CSV file with 4 records, runs them all sequentially as a unified test batch, and outputs a final summary report (4 Passed, 0 Failed).
+
+5. Advanced Automation (Headless & Desktop)
+
+• Experiment 9: Silent Mode Test Execution (Headless)
+	• What it does: Runs tests silently without printing clutter to the terminal command screen. Instead, it exports all the test results (PASS/FAIL) directly into a separate text file log (silent_test_log.txt).
+• Experiment 10: Test Case for Calculator in Windows Application
+	• What it does: Steps out of the browser entirely to control the Windows Operating System. It opens the native Windows Calculator app (calc.exe), simulates physical keyboard presses to calculate 7 + 5 =, pauses for a second, and takes a screenshot (calculator_result.png) so a human can visually confirm the answer is 12.
+
+
+
+
+
+
+
+
+
+sql jdbc
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+public class JdbcDemo {
+
+    // 1. Define Database Credentials and URL
+    // (This example uses MySQL; change the URL and port according to your DB)
+    private static final String URL = "jdbc:mysql://localhost:3306/your_database_name";
+    private static final String USER = "root";
+    private static final String PASSWORD = "your_password";
+
+    public static void main(String[] args) {
+        // SQL query to execute
+        String query = "SELECT id, name, email FROM users";
+
+        System.out.println("Connecting to database...");
+
+        // 2. Establish connection and execute query using try-with-resources
+        try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
+             Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(query)) {
+
+            System.out.println("Connection successful!\n");
+            System.out.println("ID | Name | Email");
+            System.out.println("---------------------");
+
+            // 3. Process the results
+            while (resultSet.next()) {
+                int id = resultSet.getInt("id");
+                String name = resultSet.getString("name");
+                String email = resultSet.getString("email");
+
+                System.out.println(id + " | " + name + " | " + email);
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Database error occurred!");
+            e.printStackTrace();
+        }
+    }
+}
